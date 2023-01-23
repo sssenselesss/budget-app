@@ -1,9 +1,25 @@
-const OPARETION_TYPES = {
-  INCOME: "income",
-  EXPENSE: "expense",
-};
+import { useState } from "react";
+import { OPARETION_TYPES } from "../types/operations";
+import { formatMoney } from "../utils";
 
-const OPARETIONS = [
+const INCOME_CATEGORIES = {
+  salary: "Зарплата",
+  tranfer: "Перевод",
+  cashback : "Кэшбек",
+
+}
+
+const EXPENSE_CATEGORIES = {
+  products:"Продукты",
+  car:"Автомобиль",
+  services: "Комунальные услуги",
+}
+
+const CATEGORIES = {...INCOME_CATEGORIES,...EXPENSE_CATEGORIES};
+
+
+
+const initialItems = [
   {
     id: 1,
     category: "products",
@@ -27,17 +43,52 @@ const OPARETIONS = [
   },
 ];
 
-// форматирование чисел
-const formatNumber = (value) => {
-  return Intl.NumberFormat("ru-RU").format(parseInt(value));
-};
+const getItemType = (category) =>{
+  if(Object.keys(INCOME_CATEGORIES).includes(category)){
+    return OPARETION_TYPES.INCOME;
+  }
+  return OPARETION_TYPES.EXPENSE;
+}
 
-// Фунскция форматирования для денег
-const formatMoney = (value) => {
-  return `${formatNumber(value)} руб.`;
-};
 
 const HomePage = () => {
+  const [items, setItems] = useState(initialItems)
+  const [balance,setBalance] = useState(0);
+  const[category,setCategory] = useState('none');
+
+  console.log(category);
+
+  const onChangeCategoryHandle = (e) => setCategory(e.target.value);
+
+  const onChangeBalanceHandle = (event) =>{
+    setBalance((prevState) =>{
+      const value = parseInt(event.target.value) || 0;
+
+      if(!isNaN(value)){
+        prevState = value;
+      }
+
+      return prevState;
+    })
+  }
+
+  const onAddItemHandle = () =>{
+    setItems((prev) =>{
+      prev = [...prev];
+
+      prev.push( {
+        id: Date.now(),
+        category: category,
+        value: balance,
+        type: getItemType(category),
+        date: new Date(),
+      });
+
+      return prev;
+    })
+
+    setBalance(0)
+  }
   return (
     <section>
       <div className="container">
@@ -46,20 +97,31 @@ const HomePage = () => {
         </div>
 
         <div className="AddOperation">
-          <form action="" className="balance-form">
+          <form action="" className="balance-form" onSubmit={e =>e.preventDefault()}>
             <h2>Доавбить операция</h2>
             <div className="wrapper">
               <input
                 type="text"
-                clas
+               
                 name="balance"
                 placeholder="30 000"
                 className="AddInput"
+                value={balance}
+                onChange={(e) =>{onChangeBalanceHandle(e)}}
               />
-              <select name="category" id="">
-                <option value="products">Продукты</option>
+              <select name="category" id="" onChange={(e) => onChangeCategoryHandle(e)}>
+                <option value="none">Не выбрано</option>
+                {
+                  Object.keys(CATEGORIES).map((category) =>{
+                    return (
+                      <option key={category} value={category}>
+                          {CATEGORIES[category]}
+                      </option>
+                    );
+                  })
+                }
               </select>
-              <button className="button">Добавить операцию</button>
+              <button className="button" onClick={onAddItemHandle}>Добавить операцию</button>
             </div>
           </form>
         </div>
@@ -73,25 +135,25 @@ const HomePage = () => {
           </div>
 
           <div className="operations">
-            {OPARETIONS.map((operation) => {
+            {items.map((item) => {
               return (
-                <div className="operation" key={operation.id}>
+                <div className="operation" key={item.id}>
                   <div
                     className={`circle ${
-                      operation.type === OPARETION_TYPES.INCOME
+                      item.type === OPARETION_TYPES.INCOME
                         ? "income"
                         : "expense"
                     }`}
                   >
-                    {operation.type == OPARETION_TYPES.INCOME ? (
+                    {item.type == OPARETION_TYPES.INCOME ? (
                       <i className="fa-solid fa-money-bill"></i>
                     ) : (
                       <i className="fa-solid fa-shop"></i>
                     )}
                   </div>
                   
-                  <p className="category">Категория: {operation.category}</p>
-                  <p className="total">{formatMoney(operation.value)}</p>
+                  <p className="category">Категория: {CATEGORIES[item.category]}</p>
+                  <p className="total">{formatMoney(item.value)}</p>
                   <button className="button sm button--remove">Удалить</button>
                 </div>
               );

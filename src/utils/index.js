@@ -1,4 +1,4 @@
 import formatMoney from "./FormatMoney";
 import formatNumber from "./FormatNumber";
-
-export {formatMoney,formatNumber}
+import calculateBalance from "./calculateBalance";
+export {formatMoney,formatNumber,calculateBalance}
